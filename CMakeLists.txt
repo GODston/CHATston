@@ -34,7 +34,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(wxWidgets)
 
-set(SRCS main.cpp)
+set(SRCS src/main.cpp)
 
 add_executable(main WIN32 ${SRCS})
 target_link_libraries(main PRIVATE wx::core wx::net)
