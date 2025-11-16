@@ -4,8 +4,8 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/build/_deps/wxwidgets-src/include/**",
-                "${workspaceFolder}/build/_deps/wxwidgets-build/lib/wx/include/**"
+                "${workspaceFolder}/build/_deps/wxwidgets-src/include",
+                "${workspaceFolder}/build/_deps/wxwidgets-build/lib/vc_x64_lib/mswud/wx"
             ],
             "defines": [
                 "__WXMSW__",

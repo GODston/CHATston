@@ -36,5 +36,5 @@ FetchContent_MakeAvailable(wxWidgets)
 
 set(SRCS src/main.cpp)
 
-add_executable(main WIN32 ${SRCS})
-target_link_libraries(main PRIVATE wx::core wx::net)
+add_executable(CHATston WIN32 ${SRCS})
+target_link_libraries(CHATston PRIVATE wx::core wx::net)
