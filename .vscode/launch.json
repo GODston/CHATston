@@ -1,0 +1,53 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(lldb-mac) Launch",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/main.app",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build with CMake"
+        },
+        {
+            "name": "(lldb-mac) Launch (Release)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build-release/main.app",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build with CMake (Release)"
+        },
+        {
+            "name": "(lldb-linux) Launch",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/main",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build with CMake"
+        },
+        {
+            "name": "(lldb-linux) Launch (Release)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build-release/main",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build with CMake (Release)"
+        },
+        {
+            "name": "(msvc) Launch",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\build\\Debug\\main.exe",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build with CMake"
+        },
+        {
+            "name": "(msvc) Launch (Release)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\build-release\\Release\\main.exe",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build with CMake (Release)"
+        }
+    ]
+}
