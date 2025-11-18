@@ -1,6 +1,7 @@
 #include <wx/wx.h>
 #include <thread>
-#include "Models/Audio/Recorder.h"
+#include "Views/Controls/AudioDeviceSelectors/headers/AudioDeviceSelectors.h"
+#include "UI/headers/UserInterface.h"
 
 #pragma region Declarations
 class MyApp : public wxApp
@@ -13,6 +14,7 @@ class MyFrame : public wxFrame
 {
 public:
     MyFrame();
+    ~MyFrame();
 
 private:
     // Private attributes
@@ -22,22 +24,11 @@ private:
     // UI Elements
     wxPanel* panel_Main;
     wxBoxSizer* sizer_Main;
-    //// Input audio device selector
-    wxPanel* panel_InputDevice;
-    wxBoxSizer* sizer_InputDevice;
-    wxStaticText* label_InputDevice;
-    wxComboBox* combo_InputDevice;
-    //// Output audio device selector
-    wxPanel* panel_OutputDevice;
-    wxBoxSizer* sizer_OutputDevice;
-    wxStaticText* label_OutputDevice;
-    wxComboBox* combo_OutputDevice;
+
+    //// Audio device selectors control
+    Views::Controls::AudioDeviceSelectors::AudioDeviceSelectorsControl* audioDeviceSelectors;
     //// Record button
     wxButton* recordBtn;
-    
-
-    // Functions
-    void ProbeDevices(wxFrame* frame);
 
     // Events
     void OnRecordBtn(wxCommandEvent& event);
@@ -68,35 +59,22 @@ MyFrame::MyFrame()
     : wxFrame(nullptr, wxID_ANY, "CHATston", wxDefaultPosition, wxDefaultSize, 
               wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER & ~wxMAXIMIZE_BOX)
 {
+    // Initialize UI system with this frame
+    UI::Initialize(this);
+
     // Initialize controls
     panel_Main = new wxPanel(this);
-    //// Input audio device selector
-    panel_InputDevice = new wxPanel(panel_Main);
-    label_InputDevice = new wxStaticText(panel_InputDevice, wxID_ANY, "Input Device:");
-    combo_InputDevice = new wxComboBox(panel_InputDevice, ID_InputDeviceCombo, "Select Input...", wxDefaultPosition, wxSize(200, -1), 0, nullptr, wxCB_READONLY);
-    //// Output audio device selector
-    panel_OutputDevice = new wxPanel(panel_Main);
-    label_OutputDevice = new wxStaticText(panel_OutputDevice, wxID_ANY, "Output Device:");
-    combo_OutputDevice = new wxComboBox(panel_OutputDevice, ID_OutputDeviceCombo, "Select Output...", wxDefaultPosition, wxSize(200, -1), 0, nullptr, wxCB_READONLY);
+
+    // Create audio device selectors control
+    audioDeviceSelectors = new Views::Controls::AudioDeviceSelectors::AudioDeviceSelectorsControl(panel_Main);
+    
     // Create UI elements and store references to ones you need later
     recordBtn = new wxButton(panel_Main, ID_RecordButton, "Record", wxDefaultPosition, wxSize(100, 30));
     
     // Create sizers for layout
     sizer_Main = new wxBoxSizer(wxVERTICAL);
-    sizer_InputDevice = new wxBoxSizer(wxHORIZONTAL);
-    sizer_OutputDevice = new wxBoxSizer(wxHORIZONTAL);
-    
-    // Add elements with proper spacing and alignment
-    sizer_InputDevice->Add(label_InputDevice, 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
-    sizer_InputDevice->Add(combo_InputDevice, 1, wxALL | wxEXPAND, 5);
-    panel_InputDevice->SetSizer(sizer_InputDevice);
-    
-    sizer_OutputDevice->Add(label_OutputDevice, 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
-    sizer_OutputDevice->Add(combo_OutputDevice, 1, wxALL | wxEXPAND, 5);
-    panel_OutputDevice->SetSizer(sizer_OutputDevice);
 
-    sizer_Main->Add(panel_InputDevice, 0, wxALL | wxEXPAND, 5);
-    sizer_Main->Add(panel_OutputDevice, 0, wxALL | wxEXPAND, 5);
+    sizer_Main->Add(audioDeviceSelectors->panel_Main, 0, wxALL | wxEXPAND, 5);
     sizer_Main->Add(recordBtn, 0, wxALL | wxCENTER, 10);
     
     panel_Main->SetSizer(sizer_Main);
@@ -107,53 +85,17 @@ MyFrame::MyFrame()
     SetMinSize(minSize);
 
     CreateStatusBar();
-    
-    ProbeDevices(this);
 
     Bind(wxEVT_BUTTON, &MyFrame::OnRecordBtn, this, ID_RecordButton);
-    Bind(wxEVT_COMBOBOX, &MyFrame::OnInputDeviceChange, this, ID_InputDeviceCombo);
-    Bind(wxEVT_COMBOBOX, &MyFrame::OnOutputDeviceChange, this, ID_OutputDeviceCombo);
+
+    // Load audio devices
+    audioDeviceSelectors->ProbeDevices();
 }
 
-void MyFrame::ProbeDevices(wxFrame* frame)
+MyFrame::~MyFrame()
 {
-    // Run ProbeDevices in a separate thread
-    std::thread deviceThread([this]() {
-        SetStatusText("Probing audio devices...");
-        Models::Audio::ProbeDevices();
-        
-        // Update UI on main thread
-        wxTheApp->CallAfter([this, inputDevices = Models::Audio::InputDevices, outputDevices = Models::Audio::OutputDevices,
-                defaultInputDevice = Models::Audio::DefaultInputDevice, defaultOutputDevice = Models::Audio::DefaultOutputDevice]() {
-            // Clear existing items
-            combo_InputDevice->Clear();
-            combo_OutputDevice->Clear();
-            
-            // Populate input devices
-            for (const auto& pair : inputDevices) {
-                combo_InputDevice->Append(pair.first);
-            }
-            
-            // Populate output devices
-            for (const auto& pair : outputDevices) {
-                combo_OutputDevice->Append(pair.first);
-            }
-            
-            // Set default selections
-            if (!defaultInputDevice.empty()) {
-                SelectedInputDeviceIndex = defaultInputDevice;
-                combo_InputDevice->SetSelection(combo_InputDevice->FindString(SelectedInputDeviceIndex));
-            }
-            if (!defaultOutputDevice.empty()) {
-                SelectedOutputDeviceIndex = defaultOutputDevice;
-                combo_OutputDevice->SetSelection(combo_OutputDevice->FindString(SelectedOutputDeviceIndex));
-            }
-            SetStatusText("Device probe completed.");
-        });
-    });
-    
-    // Detach the thread so it runs independently
-    deviceThread.detach();
+    // Delete non-wx custom objects
+    delete audioDeviceSelectors;
 }
 
 void MyFrame::OnExit(wxCommandEvent& event)
@@ -164,17 +106,5 @@ void MyFrame::OnExit(wxCommandEvent& event)
 void MyFrame::OnRecordBtn(wxCommandEvent& event)
 {
 
-}
-
-void MyFrame::OnInputDeviceChange(wxCommandEvent& event)
-{
-    wxString selectedDevice = combo_InputDevice->GetStringSelection();
-    SelectedInputDeviceIndex = selectedDevice.ToStdString();
-}
-
-void MyFrame::OnOutputDeviceChange(wxCommandEvent& event)
-{
-    wxString selectedDevice = combo_OutputDevice->GetStringSelection();
-    SelectedOutputDeviceIndex = selectedDevice.ToStdString();
 }
 #pragma endregion

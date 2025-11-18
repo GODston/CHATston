@@ -20,9 +20,18 @@ include(cmake/FetchDependencies.cmake)
 # Source files
 set(SRCS 
     src/main.cpp
-    src/Models/Audio/Recorder.cpp
+    src/Models/Audio/src/Recorder.cpp
+    src/Models/Audio/src/Audio.cpp
+    src/Views/Controls/AudioDeviceSelectors/src/AudioDeviceSelectors.cpp
+    src/UI/src/UserInterface.cpp
 )
 
 # Build executable
 add_executable(CHATston WIN32 ${SRCS})
+
+# Add include directories so you can use clean paths
+target_include_directories(CHATston PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
 target_link_libraries(CHATston PRIVATE wx::core wx::net rtaudio)
