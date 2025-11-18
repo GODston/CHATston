@@ -18,8 +18,6 @@ public:
 
 private:
     // Private attributes
-    std::string SelectedInputDeviceIndex = "";
-    std::string SelectedOutputDeviceIndex = "";
 
     // UI Elements
     wxPanel* panel_Main;
@@ -33,8 +31,6 @@ private:
     // Events
     void OnRecordBtn(wxCommandEvent& event);
     void OnExit(wxCommandEvent& event);
-    void OnInputDeviceChange(wxCommandEvent& event);
-    void OnOutputDeviceChange(wxCommandEvent& event);
 };
 
 enum
