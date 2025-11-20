@@ -1,47 +1,88 @@
 #include "../headers/Audio_Helper.h"
+#include <iostream>
 
 namespace Models::Audio
 {
     // Recorder class implementations
-    Recorder::Recorder()
-    {
-        // Constructor implementation
-    }
+    Recorder::Recorder(int sourceID, unsigned int deviceID)
+        : sourceID(sourceID), recordingDeviceID(deviceID), recording(false) {}
 
     Recorder::~Recorder()
     {
         // Destructor - ensure recording is stopped
-        if (audio.isStreamOpen())
-        {
-            stopRecording();
-        }
+        stopRecording();
     }
 
-    bool Recorder::startRecording(unsigned int sampleRate, unsigned int channels)
+    bool Recorder::startRecording()
     {
-        // TODO: Implement recording start logic
-        // This would configure and open the audio stream
-        return false;
+        if (recording) {
+            return false; // Already recording
+        }
+        
+        try {
+            RtAudio::StreamParameters params;
+            params.deviceId = recordingDeviceID;
+            params.nChannels = channels;
+            params.firstChannel = 0;
+            
+            unsigned int bufferSize = 256;
+            
+            audioInput.openStream(nullptr, &params, RTAUDIO_FLOAT32,
+                           sampleRate, &bufferSize, &recordCallback, this);
+            
+            recordedData.clear();
+            audioInput.startStream();
+            recording = true;
+            return true;
+        }
+        catch (...) {
+            std::cerr << "RtAudio error starting recording" << std::endl;
+            return false;
+        }
     }
 
     void Recorder::stopRecording()
     {
-        // TODO: Implement recording stop logic
-        if (audio.isStreamRunning())
-        {
-            audio.stopStream();
+        if (!recording) {
+            return;
         }
-        if (audio.isStreamOpen())
-        {
-            audio.closeStream();
+        
+        try {
+            if (audioInput.isStreamRunning()) {
+                audioInput.stopStream();
+            }
+            if (audioInput.isStreamOpen()) {
+                audioInput.closeStream();
+            }
+            recording = false;
+        }
+        catch (...) {
+            //use ui library to show error;
         }
     }
 
-    int Recorder::recordCallback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames,
-                                  double streamTime, void* userData)
+    void Recorder::ChangeRecordingDevice(int deviceID)
     {
-        // TODO: Implement audio callback
-        // This is called by RtAudio when audio data is available
+        recordingDeviceID = deviceID;
+        // Additional logic to handle device change during recording can be added here
+    }
+
+    int Recorder::recordCallback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames,
+                                  double streamTime, unsigned int status, void* userData)
+    {
+        Recorder* recorder = static_cast<Recorder*>(userData);
+        float* buffer = static_cast<float*>(inputBuffer);
+        
+        if (buffer && recorder) {
+            // Send to global mixer
+            MixAudio(recorder->sourceID, buffer, nBufferFrames, recorder->sequenceNumber++);
+            
+            // Optionally keep local copy
+            size_t numSamples = nBufferFrames * channels;
+            recorder->recordedData.insert(recorder->recordedData.end(), 
+                                         buffer, buffer + numSamples);
+        }
+        
         return 0;
     }
 }

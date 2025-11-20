@@ -13,6 +13,8 @@ namespace Views::Controls::AudioDeviceSelectors
 
         // Functions
         void ProbeDevices();
+        int GetSelectedInputDeviceID() const;
+        int GetSelectedOutputDeviceID() const;
 
     private:
         // Internal IDs for this control
@@ -23,8 +25,8 @@ namespace Views::Controls::AudioDeviceSelectors
         };
         
         // Private attributes
-        std::string SelectedInputDeviceIndex = "";
-        std::string SelectedOutputDeviceIndex = "";
+        int SelectedInputDeviceID = -1;
+        int SelectedOutputDeviceID = -1;
 
         // UI Elements
         wxBoxSizer* sizer_Main;

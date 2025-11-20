@@ -58,28 +58,7 @@ namespace Views::Controls::AudioDeviceSelectors
             Models::Audio::AudioDevice defaultOutputDevice;
             std::vector<Models::Audio::AudioDevice> inputDevices = Models::Audio::GetInputDevices();
             std::vector<Models::Audio::AudioDevice> outputDevices = Models::Audio::GetOutputDevices();
-            if(inputDevices.empty() && outputDevices.empty())
-            {
-                wxTheApp->CallAfter([]() {
-                    UI::SetStatusMessage("No audio devices found.");
-                });
-                return;
-            }
-            else if(inputDevices.empty())
-            {
-                wxTheApp->CallAfter([]() {
-                    UI::SetStatusMessage("No input audio devices found.");
-                });
-                return;
-            }
-            else if(outputDevices.empty())
-            {
-                wxTheApp->CallAfter([]() {
-                    UI::SetStatusMessage("No output audio devices found.");
-                });
-                return;
-            }
-            else
+            if(!inputDevices.empty() && !outputDevices.empty())
             {
                 bool foundDefaultInput = Models::Audio::GetDefaultInputDevice(&defaultInputDevice);
                 bool foundDefaultOutput = Models::Audio::GetDefaultOutputDevice(&defaultOutputDevice);
@@ -92,20 +71,28 @@ namespace Views::Controls::AudioDeviceSelectors
 
                     // Populate input devices
                     for (const auto& device : inputDevices) {
-                        combo_InputDevice->Append(device.name);
+                        int idx = combo_InputDevice->Append(device.name);
+                        combo_InputDevice->SetClientData(idx, reinterpret_cast<void*>(static_cast<intptr_t>(device.id)));
                     }
                     
                     // Populate output devices
                     for (const auto& device : outputDevices) {
-                        combo_OutputDevice->Append(device.name);
+                        int idx = combo_OutputDevice->Append(device.name);
+                        combo_OutputDevice->SetClientData(idx, reinterpret_cast<void*>(static_cast<intptr_t>(device.id)));
                     }
                     
                     // Set default selections
-                    SelectedInputDeviceIndex = defaultInputDevice.name;
-                    combo_InputDevice->SetSelection(combo_InputDevice->FindString(SelectedInputDeviceIndex));
+                    int inputIdx = combo_InputDevice->FindString(defaultInputDevice.name);
+                    if (inputIdx != wxNOT_FOUND) {
+                        combo_InputDevice->SetSelection(inputIdx);
+                        SelectedInputDeviceID = defaultInputDevice.id;
+                    }
 
-                    SelectedOutputDeviceIndex = defaultOutputDevice.name;
-                    combo_OutputDevice->SetSelection(combo_OutputDevice->FindString(SelectedOutputDeviceIndex));
+                    int outputIdx = combo_OutputDevice->FindString(defaultOutputDevice.name);
+                    if (outputIdx != wxNOT_FOUND) {
+                        combo_OutputDevice->SetSelection(outputIdx);
+                        SelectedOutputDeviceID = defaultOutputDevice.id;
+                    }
 
                     UI::SetStatusMessage("Device search completed.");
                     });
@@ -132,6 +119,27 @@ namespace Views::Controls::AudioDeviceSelectors
                     return;
                 }
             }
+            else if(inputDevices.empty() && outputDevices.empty())
+            {
+                wxTheApp->CallAfter([]() {
+                    UI::SetStatusMessage("No audio devices found.");
+                });
+                return;
+            }
+            else if(inputDevices.empty())
+            {
+                wxTheApp->CallAfter([]() {
+                    UI::SetStatusMessage("No input audio devices found.");
+                });
+                return;
+            }
+            else if(outputDevices.empty())
+            {
+                wxTheApp->CallAfter([]() {
+                    UI::SetStatusMessage("No output audio devices found.");
+                });
+                return;
+            }
         });
     
         // Detach the thread so it runs independently
@@ -140,13 +148,29 @@ namespace Views::Controls::AudioDeviceSelectors
 
     void AudioDeviceSelectorsControl::OnInputDeviceChange(wxCommandEvent& event)
     {
-        wxString selectedDevice = combo_InputDevice->GetStringSelection();
-        SelectedInputDeviceIndex = selectedDevice.ToStdString();
+        int selection = combo_InputDevice->GetSelection();
+        if (selection != wxNOT_FOUND) {
+            void* data = combo_InputDevice->GetClientData(selection);
+            SelectedInputDeviceID = static_cast<int>(reinterpret_cast<intptr_t>(data));
+        }
     }
 
     void AudioDeviceSelectorsControl::OnOutputDeviceChange(wxCommandEvent& event)
     {
-        wxString selectedDevice = combo_OutputDevice->GetStringSelection();
-        SelectedOutputDeviceIndex = selectedDevice.ToStdString();
+        int selection = combo_OutputDevice->GetSelection();
+        if (selection != wxNOT_FOUND) {
+            void* data = combo_OutputDevice->GetClientData(selection);
+            SelectedOutputDeviceID = static_cast<int>(reinterpret_cast<intptr_t>(data));
+        }
+    }
+
+    int AudioDeviceSelectorsControl::GetSelectedInputDeviceID() const
+    {
+        return SelectedInputDeviceID;
+    }
+
+    int AudioDeviceSelectorsControl::GetSelectedOutputDeviceID() const
+    {
+        return SelectedOutputDeviceID;
     }
 }

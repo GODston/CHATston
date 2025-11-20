@@ -20,10 +20,11 @@ include(cmake/FetchDependencies.cmake)
 # Source files
 set(SRCS 
     src/main.cpp
-    src/Models/Audio/src/Recorder.cpp
-    src/Models/Audio/src/Audio.cpp
-    src/Views/Controls/AudioDeviceSelectors/src/AudioDeviceSelectors.cpp
     src/UI/src/UserInterface.cpp
+    src/Models/Audio/src/Audio.cpp
+    src/Models/Audio/src/Recorder.cpp
+    src/Models/Audio/src/Player.cpp
+    src/Views/Controls/AudioDeviceSelectors/src/AudioDeviceSelectors.cpp
 )
 
 # Build executable

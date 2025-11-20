@@ -2,6 +2,7 @@
 #include <thread>
 #include "Views/Controls/AudioDeviceSelectors/headers/AudioDeviceSelectors.h"
 #include "UI/headers/UserInterface.h"
+#include "Models/Audio/headers/Audio.h"
 
 #pragma region Declarations
 class MyApp : public wxApp
@@ -28,6 +29,10 @@ private:
     //// Record button
     wxButton* recordBtn;
 
+    // Audio components
+    Models::Audio::Recorder* recorder;
+    Models::Audio::Player* player;
+
     // Events
     void OnRecordBtn(wxCommandEvent& event);
     void OnExit(wxCommandEvent& event);
@@ -53,7 +58,8 @@ bool MyApp::OnInit()
 
 MyFrame::MyFrame()
     : wxFrame(nullptr, wxID_ANY, "CHATston", wxDefaultPosition, wxDefaultSize, 
-              wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER & ~wxMAXIMIZE_BOX)
+              wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER & ~wxMAXIMIZE_BOX),
+      recorder(nullptr), player(nullptr)
 {
     // Initialize UI system with this frame
     UI::Initialize(this);
@@ -92,6 +98,8 @@ MyFrame::~MyFrame()
 {
     // Delete non-wx custom objects
     delete audioDeviceSelectors;
+    delete recorder;
+    delete player;
 }
 
 void MyFrame::OnExit(wxCommandEvent& event)
@@ -101,6 +109,34 @@ void MyFrame::OnExit(wxCommandEvent& event)
 
 void MyFrame::OnRecordBtn(wxCommandEvent& event)
 {
-
+    int inputDeviceID = audioDeviceSelectors->GetSelectedInputDeviceID();
+    int outputDeviceID = audioDeviceSelectors->GetSelectedOutputDeviceID();
+    
+    if (inputDeviceID < 0 || outputDeviceID < 0) {
+        UI::ShowError("Error", "Please select both input and output devices");
+        return;
+    }
+    
+    // Clean up existing instances
+    delete recorder;
+    delete player;
+    
+    // Create new recorder and player with selected devices
+    // Each recorder needs a unique sourceID - using 1 for single recorder
+    recorder = new Models::Audio::Recorder(1, inputDeviceID);
+    player = new Models::Audio::Player(outputDeviceID);
+    
+    // Start recording and playback
+    if (recorder->startRecording()) {
+        UI::SetStatusMessage("Recording started");
+    } else {
+        UI::ShowError("Error", "Failed to start recording");
+    }
+    
+    if (player->startPlayback()) {
+        UI::SetStatusMessage("Playback started");
+    } else {
+        UI::ShowError("Error", "Failed to start playback");
+    }
 }
 #pragma endregion
