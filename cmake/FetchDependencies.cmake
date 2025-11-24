@@ -11,7 +11,7 @@ FetchContent_Declare(
 FetchContent_Declare(
    RtAudio
    GIT_REPOSITORY https://github.com/thestk/rtaudio.git
-   GIT_SHALLOW ON
+   GIT_TAG 6.0.1
 )
 
 # Make dependencies available
